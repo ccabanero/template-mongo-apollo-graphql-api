@@ -42,6 +42,22 @@ GraphQL Playground
 }
 ````
 
+## Requirements
+
+PNA garage sale owners:
+
+* User can register their garage sale.
+* User can view the garage sale they own.
+* User can edit the garage sale they own.
+* User can upload images for their garage sale.
+
+Admin Users:
+
+* Can view garage sales.
+* Can edit garage sales.
+* Can delete a garage sale.
+
+
 ## Scaffolding
 
 __Package.json__
@@ -55,7 +71,7 @@ npm init -y
 Install stuff
 
 ````
-npm install express apollo-server-express cors dotenv uuid mongoose bcryptjs graphql-iso-date jsonwebtoken graphql-resolvers dataloader
+npm install express apollo-server-express cors dotenv uuid mongoose bcryptjs graphql-iso-date jsonwebtoken graphql-resolvers dataloader validator
 ````
 
 __Environment__

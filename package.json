@@ -25,6 +25,7 @@
     "graphql-resolvers": "^0.3.3",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.8.1",
-    "uuid": "^3.3.3"
+    "uuid": "^3.3.3",
+    "validator": "^12.1.0"
   }
 }
