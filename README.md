@@ -2,10 +2,11 @@
 
 ## Technology Stack
 
-* Node/Express
-* GraphQL with Apollo Server - apollo-server-express
-* Mongoose - ODM
-* MongoDB - NoSQL
+* [Node.js](https://nodejs.org/en/)
+* [Express](https://expressjs.com) - Web framework
+* [Apollo Server Express](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-express) - GraphQL Server
+* [MongoDB](https://www.mongodb.com) - NoSQL database
+* [Mongoose](https://mongoosejs.com) - MongoDB object modeling
 
 Pre-requisite: MongoDB running on your Mac.  Also Robot 3T client for MongoDB.
 
@@ -88,3 +89,187 @@ __Extensions to VSCode Used__
 
 * ESLint extension to VSCode to enforce AirBNB JavaScript style guide
 * Apollo GraphyQL extension to VSCode
+
+## Data Models
+
+See database/models/user.js
+
+````
+const mongoose = require('mongoose');
+const validator = require('validator');
+
+const userSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true,
+    unique: true,
+    validate(value) {
+      if (!validator.isEmail(value)) {
+        throw new Error('Email is invalid');
+      }
+    },
+  },
+  password: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 7,
+    validate(value) {
+      if (value.toLowerCase().includes('password')) {
+        throw new Error('Password cannot contain the word password');
+      }
+    },
+  },
+  sales: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Sale',
+    },
+  ],
+  isAdmin: {
+    type: Boolean,
+    required: true,
+  },
+}, {
+  timestamps: true,
+});
+
+module.exports = mongoose.model('User', userSchema);
+
+````
+
+See database/models/sale.js
+
+````
+const mongoose = require('mongoose');
+
+const saleSchema = new mongoose.Schema({
+  address: {
+    type: String,
+    required: true,
+  },
+  latitude: {
+    type: Number,
+    required: true,
+  },
+  longitude: {
+    type: Number,
+    required: true,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
+  categories: [
+    {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+  ],
+  desc: {
+    type: String,
+    required: true,
+  },
+});
+
+module.exports = mongoose.model('Sale', saleSchema);
+
+````
+
+The /database/utils/inedex.js is used to connect the Node/Express app a MongoDB instance.
+
+## Node App
+
+Create index.js
+
+````
+const express = require('express');
+const { ApolloServer } = require('apollo-server-express');
+const cors = require('cors');
+const dotEnv = require('dotenv');
+
+const typeDefs = require('./typeDefs');
+const resolvers = require('./resolvers');
+const { connectToMongoDB } = require('./database/util');
+const { verifyUser } = require('./helper/context');
+
+// set env variables
+dotEnv.config();
+
+// create express app
+const app = express();
+
+// db connectivity
+connectToMongoDB();
+
+// cors
+app.use(cors());
+
+// body parser middleware
+app.use(express.json());
+
+// apollo server 
+const apolloServer = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async (integrationContext) => {
+    const { req } = integrationContext;
+    await verifyUser(req);
+    return {
+      email: req.email,
+      loggedInUserId: req.loggedInUserId
+    }
+  }
+});
+apolloServer.applyMiddleware({ app, path: '/graphql' });
+
+// port
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server listening on PORT: ${PORT}`);
+  console.log(`Graphql Endpoint: ${apolloServer.graphqlPath}`)
+});
+
+````
+
+__Nodemon__ 
+
+Add nodemon
+
+````
+npm install -D nodemon
+````
+
+Update package.json to use nodemon
+
+````
+...
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+...
+````
+
+Running the app
+When you want to run the app you now do ...
+
+````
+npm run dev
+````
+
