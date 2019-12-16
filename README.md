@@ -2,7 +2,7 @@
 
 A simple GraphQL API for PNA.
 
-![screenshot](../master/screenshot/graphql_playground.png)
+![screenshot](./screenshot/graphql_playground.png)
 
 ## Technology Stack
 
