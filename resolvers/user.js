@@ -28,7 +28,7 @@ module.exports = {
   },
   // mutation resolver
   Mutation: {
-    signup: async (_, args) => {
+    signup: async (parent, args) => {
       try {
         const { input } = args;
         const user = await User.findOne({ email: input.email });

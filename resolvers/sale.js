@@ -9,13 +9,12 @@ module.exports = {
   // query resolvers
   Query: {
     /**
-     * Finds all sales owned by the authenticated user.
+     * Finds all sales.
      */
-    salesByOwner: combineResolvers(isAuthenticated, async (parent, args, context) => {
+    sales: async (parent, args) => {
       try {
         const { skip, limit } = args;
-        const { loggedInUserId } = context;
-        const sales = await Sale.find({ user: loggedInUserId })
+        const sales = await Sale.find({})
           .sort({ _id: -1 })
           .skip(skip)
           .limit(limit);
@@ -25,11 +24,11 @@ module.exports = {
         console.log(error);
         throw error;
       }
-    }),
+    },
     /**
-     * Finds sale by id, owned by the authenticated user.
+     * Finds sale by id.
      */
-    saleByOwner: combineResolvers(isAuthenticated, isSaleOwner, async (_, args) => {
+    saleById: async (parent, args) => {
       try {
         const { id } = args;
         const sale = await Sale.findById(id);
@@ -39,14 +38,14 @@ module.exports = {
         console.log(error);
         throw error;
       }
-    }),
+    },
   },
   // mutation resolvers
   Mutation: {
     /**
      * Creates a new sale, owned by the authenticated user.
      */
-    createSale: combineResolvers(isAuthenticated, async (_, args, context) => {
+    createSale: combineResolvers(isAuthenticated, async (parent, args, context) => {
       try {
         const { input } = args;
         const { email } = context;
@@ -65,7 +64,7 @@ module.exports = {
     /**
      * Updates a sale owned by the authenticated user.
      */
-    updateSale: combineResolvers(isAuthenticated, isSaleOwner, async (_, args) => {
+    updateSale: combineResolvers(isAuthenticated, isSaleOwner, async (parent, args) => {
       try {
         const { id, input } = args;
         const task = await Sale.findByIdAndUpdate(id, { ...input }, { new: true });
@@ -79,7 +78,7 @@ module.exports = {
     /**
      * Deletes a saled owned by the authenticated user.
      */
-    deleteSale: combineResolvers(isAuthenticated, isSaleOwner, async (_, args, context) => {
+    deleteSale: combineResolvers(isAuthenticated, isSaleOwner, async (parent, args, context) => {
       try {
         const { id } = args;
         const { loggedInUserId } = context;
