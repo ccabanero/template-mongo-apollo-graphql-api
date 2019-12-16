@@ -6,8 +6,11 @@ const User = require('../database/models/user');
 const { isAuthenticated, isSaleOwner } = require('./middleware');
 
 module.exports = {
-  // query resolver
+  // query resolvers
   Query: {
+    /**
+     * Finds all sales owned by the authenticated user.
+     */
     salesByOwner: combineResolvers(isAuthenticated, async (parent, args, context) => {
       try {
         const { skip, limit } = args;
@@ -23,6 +26,9 @@ module.exports = {
         throw error;
       }
     }),
+    /**
+     * Finds sale by id, owned by the authenticated user.
+     */
     saleByOwner: combineResolvers(isAuthenticated, isSaleOwner, async (_, args) => {
       try {
         const { id } = args;
@@ -35,8 +41,11 @@ module.exports = {
       }
     }),
   },
-  // mutation resolver
+  // mutation resolvers
   Mutation: {
+    /**
+     * Creates a new sale, owned by the authenticated user.
+     */
     createSale: combineResolvers(isAuthenticated, async (_, args, context) => {
       try {
         const { input } = args;
@@ -53,6 +62,9 @@ module.exports = {
         throw error;
       }
     }),
+    /**
+     * Updates a sale owned by the authenticated user.
+     */
     updateSale: combineResolvers(isAuthenticated, isSaleOwner, async (_, args) => {
       try {
         const { id, input } = args;
@@ -64,6 +76,9 @@ module.exports = {
         throw error;
       }
     }),
+    /**
+     * Deletes a saled owned by the authenticated user.
+     */
     deleteSale: combineResolvers(isAuthenticated, isSaleOwner, async (_, args, context) => {
       try {
         const { id } = args;
