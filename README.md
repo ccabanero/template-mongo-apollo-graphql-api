@@ -8,9 +8,10 @@
 * [MongoDB](https://www.mongodb.com) - NoSQL database
 * [Mongoose](https://mongoosejs.com) - MongoDB object modeling
 
-Pre-requisite: MongoDB running on your Mac.  Also Robot 3T client for MongoDB.
 
-It should be mentioned, that this repo uses MongoDB.  Apollo Server is not opinionated on the DB.  For example, all of this can connect to PostgreSQL or AWS Lambda/DynamoDB.
+Note, this repo uses Express.  But Apollo Server can play well with other Node.js middleware (e.g. Hapi, KOA).  See [here](https://www.apollographql.com/docs/apollo-server/v1/).
+
+Pre-requisite: MongoDB running on your Mac.  Also Robot 3T client for MongoDB. Note, this repo uses MongoDB.  But Apollo Server is not opinionated what database you use.
 
 ## Quickstart
 
@@ -45,18 +46,21 @@ GraphQL Playground
 
 ## Requirements
 
-PNA garage sale owners:
+This GraphQL API supports the following queries and mutations:
 
-* User can register their garage sale.
-* User can view the garage sale they own.
-* User can edit the garage sale they own.
-* User can upload images for their garage sale.
+* UnAuthenticated User can sign up (creates a user in User table)
+* UnAuthenticated User can login (if signed up, responds with a JWT token)
+* Authenticated User can create a sale
+* Authenticated User can update a sale (they own)
+* Authenticated User can delete a sale (then own)
+* Authenticated User can get user info
+* UnAuthenticated User can read all sales.
+* UnAuthenticated User can read sale details for provided sale id.
 
-Admin Users:
+This GraphQL Server supports the following subscriptions:
 
-* Can view garage sales.
-* Can edit garage sales.
-* Can delete a garage sale.
+* Event for when a new Sale is created by an authenticated user.
+* Event for when a new User is signed up.
 
 
 ## Scaffolding
@@ -92,7 +96,9 @@ __Extensions to VSCode Used__
 
 ## Data Models
 
-See database/models/user.js
+This repo uses Mongoose as a ODM on top of MongoDB.  Thus, this section defines the Mongoose data models. 
+
+Create database/models/user.js
 
 ````
 const mongoose = require('mongoose');
@@ -149,10 +155,9 @@ const userSchema = new mongoose.Schema({
 
 module.exports = mongoose.model('User', userSchema);
 
-
 ````
 
-See database/models/sale.js
+Create database/models/sale.js
 
 ````
 const mongoose = require('mongoose');
@@ -186,18 +191,44 @@ const saleSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  date: {
-    type: Date,
+  year: {
+    type: Number,
     required: true,
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+}, {
+  timestamps: true,
 });
 
 module.exports = mongoose.model('Sale', saleSchema);
 
-
 ````
 
-The /database/utils/inedex.js is used to connect the Node/Express app a MongoDB instance.
+Create /database/util/index.js
+
+````
+const mongoose = require('mongoose');
+
+module.exports.connectToMongoDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_DB_URL,
+      { useNewUrlParser: true, useUnifiedTopology: true });
+
+    // eslint-disable-next-line no-console
+    console.log('Database connected successfully');
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log(error);
+    throw error;
+  }
+};
+
+module.exports.isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+````
 
 ## Node App
 
@@ -229,28 +260,35 @@ app.use(cors());
 // body parser middleware
 app.use(express.json());
 
-// apollo server 
+// apollo server
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
   context: async (integrationContext) => {
     const { req } = integrationContext;
-    await verifyUser(req);
-    return {
-      email: req.email,
-      loggedInUserId: req.loggedInUserId
+    const contextObj = {};
+    if (req) {
+      await verifyUser(req);
+      contextObj.email = req.email;
+      contextObj.loggedInUserId = req.loggedInUserId;
     }
-  }
+    return contextObj;
+  },
 });
 apolloServer.applyMiddleware({ app, path: '/graphql' });
 
 // port
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+const httpServer = app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`Server listening on PORT: ${PORT}`);
-  console.log(`Graphql Endpoint: ${apolloServer.graphqlPath}`)
+  // eslint-disable-next-line no-console
+  console.log(`Graphql Endpoint: ${apolloServer.graphqlPath}`);
 });
+
+// support for subscriptions
+apolloServer.installSubscriptionHandlers(httpServer);
 
 ````
 
@@ -273,8 +311,7 @@ Update package.json to use nodemon
 ...
 ````
 
-Running the app
-When you want to run the app you now do ...
+When you want to run the app you now do ...  Note, this won't work yet until you complete the steps below.
 
 ````
 npm run dev
@@ -326,6 +363,10 @@ module.exports = gql`
     login(input: loginInput): Token
   }
 
+  extend type Subscription {
+    userCreated: User
+  }
+
   input signupInput {
     firstName: String!
     lastName: String!
@@ -352,10 +393,6 @@ module.exports = gql`
     createdAt: Date!
     updatedAt: Date!
   }
-
-  extend type Subscription {
-    userCreated: User
-  }
 `;
 
 ````
@@ -368,7 +405,7 @@ const { gql } = require('apollo-server-express');
 module.exports = gql`
   extend type Query {
     sales(skip: Int, limit: Int): [Sale!]
-    sale(id: ID!): Sale
+    saleById(id: ID!): Sale
   }
 
   extend type Mutation {
@@ -377,38 +414,40 @@ module.exports = gql`
     deleteSale(id: ID!): Sale
   }
 
+  extend type Subscription {
+    saleCreated: Sale
+  }
+
   input createSaleInput {
     address: String!
-    latitude: Number!
-    longitude: Number!
+    latitude: Float!
+    longitude: Float!
     type: String!
     categories: [String!]
     desc: String!
-    date: Date!
-    createdAt: Date!
-    updatedAt: Date!
+    year: Int!
   }
 
   input updateSaleInput {
     address: String!
-    latitude: Number!
-    longitude: Number!
+    latitude: Float!
+    longitude: Float!
     type: String!
     categories: [String!]
     desc: String!
-    date: Date!
-    createdAt: Date!
-    updatedAt: Date!
+    year: Int!
   }
 
   type Sale {
+    id: ID!
     address: String!
-    latitude: Number!
-    longitude: Number!
+    latitude: Float!
+    longitude: Float!
     type: String!
     categories: [String!]
     desc: String!
-    date: Date!
+    year: Int!
+    user: User!
     createdAt: Date!
     updatedAt: Date!
   }
@@ -471,7 +510,7 @@ module.exports = {
   },
   // mutation resolver
   Mutation: {
-    signup: async (_, args) => {
+    signup: async (parent, args) => {
       try {
         const { input } = args;
         const user = await User.findOne({ email: input.email });
@@ -549,16 +588,20 @@ const { combineResolvers } = require('graphql-resolvers');
 // const { users, sales } = require('../constants');
 const Sale = require('../database/models/sale');
 const User = require('../database/models/user');
-const { isAuthenticated, isTaskOwner } = require('./middleware');
+const { isAuthenticated, isSaleOwner } = require('./middleware');
+const PubSub = require('../subscription');
+const { saleEvents } = require('../subscription/events');
 
 module.exports = {
-  // query resolver
+  // query resolvers
   Query: {
-    sales: combineResolvers(isAuthenticated, async (parent, args, context) => {
+    /**
+     * Finds all sales.
+     */
+    sales: async (parent, args) => {
       try {
         const { skip, limit } = args;
-        const { loggedInUserId } = context;
-        const sales = await Sale.find({ user: loggedInUserId })
+        const sales = await Sale.find({})
           .sort({ _id: -1 })
           .skip(skip)
           .limit(limit);
@@ -568,8 +611,11 @@ module.exports = {
         console.log(error);
         throw error;
       }
-    }),
-    sale: combineResolvers(isAuthenticated, isTaskOwner, async (_, args) => {
+    },
+    /**
+     * Finds sale by id.
+     */
+    saleById: async (parent, args) => {
       try {
         const { id } = args;
         const sale = await Sale.findById(id);
@@ -579,17 +625,26 @@ module.exports = {
         console.log(error);
         throw error;
       }
-    }),
+    },
   },
-  // mutation resolver
+  // mutation resolvers
   Mutation: {
-    createSale: combineResolvers(isAuthenticated, async (_, args, context) => {
+    /**
+     * Creates a new sale, owned by the authenticated user.
+     */
+    createSale: combineResolvers(isAuthenticated, async (parent, args, context) => {
       try {
         const { input } = args;
         const { email } = context;
         const user = await User.findOne({ email });
         const sale = new Sale({ ...input, user: user.id });
         const result = await sale.save();
+
+        // publish an event for sale created
+        PubSub.publish(saleEvents.SALE_CREATED, {
+          saleCreated: result,
+        });
+
         user.sales.push(result.id); // sale id
         await user.save();
         return result;
@@ -599,7 +654,10 @@ module.exports = {
         throw error;
       }
     }),
-    updateSale: combineResolvers(isAuthenticated, isTaskOwner, async (_, args) => {
+    /**
+     * Updates a sale owned by the authenticated user.
+     */
+    updateSale: combineResolvers(isAuthenticated, isSaleOwner, async (parent, args) => {
       try {
         const { id, input } = args;
         const task = await Sale.findByIdAndUpdate(id, { ...input }, { new: true });
@@ -610,7 +668,10 @@ module.exports = {
         throw error;
       }
     }),
-    deleteSale: combineResolvers(isAuthenticated, isTaskOwner, async (_, args, context) => {
+    /**
+     * Deletes a saled owned by the authenticated user.
+     */
+    deleteSale: combineResolvers(isAuthenticated, isSaleOwner, async (parent, args, context) => {
       try {
         const { id } = args;
         const { loggedInUserId } = context;
@@ -625,6 +686,12 @@ module.exports = {
         throw error;
       }
     }),
+  },
+  // subscription resolver
+  Subscription: {
+    saleCreated: {
+      subscribe: () => PubSub.asyncIterator(saleEvents.SALE_CREATED),
+    },
   },
   // field level resolvers
   Sale: {
@@ -644,6 +711,86 @@ module.exports = {
 
 ````
 
+Create /resolvers/middleware/index.js
+
+````
+const { skip } = require('graphql-resolvers');
+
+const Sale = require('../../database/models/sale');
+
+const { isValidObjectId } = require('../../database/util');
+
+module.exports.isAuthenticated = (parent, args, context) => {
+  const { email } = context;
+  if (!email) {
+    throw new Error('Access Denied! Please login to continue');
+  }
+  return skip;
+};
+
+module.exports.isSaleOwner = async (parent, args, context) => {
+  try {
+    const { id } = args;
+    const { loggedInUserId } = context;
+    if (!isValidObjectId(id)) {
+      throw new Error('Invalid Sale id');
+    }
+    const sale = await Sale.findById(id);
+    if (!sale) {
+      throw new Error('Sale not found');
+    } else if (sale.user.toString() !== loggedInUserId) {
+      throw new Error('Not authorized as sale owner');
+    }
+    return skip;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log(error);
+    throw error;
+  }
+};
+
+````
+
+## Subscriptions
+
+Create /subscription/index.js
+
+````
+const { PubSub } = require('apollo-server-express');
+
+module.exports = new PubSub();
+````
+
+Create /subscription/events/index.js
+
+````
+const userEvents = require('./user');
+const saleEvents = require('./sale');
+
+module.exports = {
+  userEvents,
+  saleEvents,
+};
+````
+
+Create /subscription/events/user.js
+
+````
+module.exports = {
+  USER_CREATED: 'USER_CREATED',
+};
+
+````
+
+Create /subscription/events/sale.js
+
+````
+module.exports = {
+  SALE_CREATED: 'SALE_CREATED',
+};
+
+````
+
 ## GraphQL Playgrounds
 
 Playgrounds 101:
@@ -659,9 +806,9 @@ Sign up:
 mutation signup {
   signup(
     input: {
-      firstName: "Clint"
-      lastName: "Cabanero"
-      email: "clint@gmail.com"
+      firstName: "Johnny"
+      lastName: "Appleseed"
+      email: "johnnyappleseed@gmail.com"
       password: "123456"
     }
   ) {
@@ -676,7 +823,7 @@ Log in
 
 ````
 mutation login {
-  login(input: { email: "clint@gmail.com", password: "123456" }) {
+  login(input: { email: "johnnyappleseed@gmail.com", password: "123456" }) {
     token
   }
 }
@@ -724,6 +871,34 @@ Create Sale:
 mutation createSale {
   createSale(
     input: {
+      address: "1234 12st Avenue WESTMINSTER"
+      latitude: 47.65465
+      longitude: -122.39658
+      type: "Family Sale"
+      categories: ["furniture", "clothing", "tools", "books"]
+      desc: "Sewing Notions, Bedding, Furniture, Electronics, toys and records."
+      year: 2019
+    }
+  ) {
+    id
+    address
+    latitude
+    longitude
+    type
+    categories
+    desc
+    year
+  }
+}
+````
+
+Update Sale:
+
+````
+mutation updateSale {
+  updateSale(
+    id: "5df7a5b3c9e1ebb6fa69084a",
+    input: {
       address: "3816 31st Avenue West"
       latitude: 47.65465
       longitude: -122.39658
@@ -745,6 +920,16 @@ mutation createSale {
 }
 ````
 
+Delete Sale:
+
+````
+mutation deleteSale {
+  deleteSale(id: "5df7a5b3c9e1ebb6fa69084a") {
+    address
+  }
+}
+````
+
 Get Sales:
 
 ````
@@ -762,11 +947,11 @@ query getSales {
 }
 ````
 
-Get Sale: 
+Get Sale By Id:
 
 ````
-query getSale {
-  sale(id: "5df6f990157d658b5adf37fb") {
+query getSaleById {
+  saleById(id: "5df7a5b3c9e1ebb6fa69084a") {
     id
     address
     latitude
@@ -779,19 +964,7 @@ query getSale {
 }
 ````
 
-
-Delete Sale:
-
-````
-mutation deleteSale {
-  deleteSale(id:"5df6f990157d658b5adf37fb") {
-    address
-  }
-}
-````
-
-Subscribe to user created
-
+Subscribe to userCreated Event:
 
 ````
 subscription userCreated {
@@ -805,5 +978,23 @@ subscription userCreated {
     updatedAt
   }
 }
+````
 
+Subscribe to saleCreated Event:
+
+````
+subscription saleCreated {
+  saleCreated {
+    id
+    address
+    latitude
+    longitude
+    type
+    categories
+    desc
+    year
+    createdAt
+    updatedAt
+  }
+}
 ````
