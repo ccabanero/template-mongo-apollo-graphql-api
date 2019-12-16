@@ -28,12 +28,16 @@ const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
   context: async (integrationContext) => {
+
     const { req } = integrationContext;
-    await verifyUser(req);
-    return {
-      email: req.email,
-      loggedInUserId: req.loggedInUserId,
-    };
+    const { connection } = integrationContext;
+    const contextObj = {};
+    if (req) {
+      await verifyUser(req);
+      contextObj.email = req.email;
+      contextObj.loggedInUserId = req.loggedInUserId;
+    }
+    return contextObj;
   },
 });
 apolloServer.applyMiddleware({ app, path: '/graphql' });
@@ -41,9 +45,12 @@ apolloServer.applyMiddleware({ app, path: '/graphql' });
 // port
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+const httpServer = app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on PORT: ${PORT}`);
   // eslint-disable-next-line no-console
   console.log(`Graphql Endpoint: ${apolloServer.graphqlPath}`);
 });
+
+// support for subscriptions
+apolloServer.installSubscriptionHandlers(httpServer);

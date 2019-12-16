@@ -789,11 +789,16 @@ Subscribe to user created
 
 
 ````
-subscription {
+subscription userCreated {
   userCreated {
     id
-    name
+    firstName
+    lastName
     email
+    isAdmin
+    createdAt
+    updatedAt
   }
 }
+
 ````
