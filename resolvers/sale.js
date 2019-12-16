@@ -8,7 +8,7 @@ const { isAuthenticated, isSaleOwner } = require('./middleware');
 module.exports = {
   // query resolver
   Query: {
-    sales: combineResolvers(isAuthenticated, async (parent, args, context) => {
+    salesByOwner: combineResolvers(isAuthenticated, async (parent, args, context) => {
       try {
         const { skip, limit } = args;
         const { loggedInUserId } = context;
@@ -23,7 +23,7 @@ module.exports = {
         throw error;
       }
     }),
-    sale: combineResolvers(isAuthenticated, isSaleOwner, async (_, args) => {
+    saleByOwner: combineResolvers(isAuthenticated, isSaleOwner, async (_, args) => {
       try {
         const { id } = args;
         const sale = await Sale.findById(id);

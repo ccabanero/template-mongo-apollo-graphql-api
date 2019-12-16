@@ -2,8 +2,8 @@ const { gql } = require('apollo-server-express');
 
 module.exports = gql`
   extend type Query {
-    sales(skip: Int, limit: Int): [Sale!]
-    sale(id: ID!): Sale
+    salesByOwner(skip: Int, limit: Int): [Sale!]
+    saleByOwner(id: ID!): Sale
   }
 
   extend type Mutation {
