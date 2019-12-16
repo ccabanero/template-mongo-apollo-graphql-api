@@ -1,4 +1,8 @@
-# GraphQL Server for PNA Garage Sale
+# GraphQL API for PNA Garage Sale
+
+A simple GraphQL API for PNA.
+
+![](graphql_playground.png)
 
 ## Technology Stack
 
