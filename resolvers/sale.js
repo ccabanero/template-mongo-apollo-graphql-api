@@ -3,7 +3,7 @@ const { combineResolvers } = require('graphql-resolvers');
 // const { users, sales } = require('../constants');
 const Sale = require('../database/models/sale');
 const User = require('../database/models/user');
-const { isAuthenticated, isTaskOwner } = require('./middleware');
+const { isAuthenticated, isSaleOwner } = require('./middleware');
 
 module.exports = {
   // query resolver
@@ -23,7 +23,7 @@ module.exports = {
         throw error;
       }
     }),
-    sale: combineResolvers(isAuthenticated, isTaskOwner, async (_, args) => {
+    sale: combineResolvers(isAuthenticated, isSaleOwner, async (_, args) => {
       try {
         const { id } = args;
         const sale = await Sale.findById(id);
@@ -53,7 +53,7 @@ module.exports = {
         throw error;
       }
     }),
-    updateSale: combineResolvers(isAuthenticated, isTaskOwner, async (_, args) => {
+    updateSale: combineResolvers(isAuthenticated, isSaleOwner, async (_, args) => {
       try {
         const { id, input } = args;
         const task = await Sale.findByIdAndUpdate(id, { ...input }, { new: true });
@@ -64,7 +64,7 @@ module.exports = {
         throw error;
       }
     }),
-    deleteSale: combineResolvers(isAuthenticated, isTaskOwner, async (_, args, context) => {
+    deleteSale: combineResolvers(isAuthenticated, isSaleOwner, async (_, args, context) => {
       try {
         const { id } = args;
         const { loggedInUserId } = context;

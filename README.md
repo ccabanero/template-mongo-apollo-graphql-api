@@ -416,6 +416,8 @@ module.exports = gql`
 
 ````
 
+## Resolvers
+
 Create /resolvers/index.js
 
 ````
@@ -640,4 +642,158 @@ module.exports = {
   },
 };
 
+````
+
+## Subscriptions
+
+## GraphQL Playgrounds
+
+Sign up:
+
+````
+mutation signup {
+  signup(
+    input: {
+      firstName: "Clint"
+      lastName: "Cabanero"
+      email: "clint@gmail.com"
+      password: "123456"
+    }
+  ) {
+    firstName
+    lastName
+    email
+  }
+}
+````
+
+Log in
+
+````
+mutation login {
+  login(input: { email: "clint@gmail.com", password: "123456" }) {
+    token
+  }
+}
+````
+
+Get User:
+
+````
+query getUser {
+  user {
+    id
+    firstName
+    lastName
+    email
+    sales {
+      address
+      latitude
+      longitude
+      type
+      categories
+      desc
+      year
+      createdAt
+      updatedAt
+    }
+    isAdmin
+    createdAt
+    updatedAt
+  }
+}
+
+````
+
+with HTTP headers (replace token):
+
+````
+{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImNsaW50QGdtYWlsLmNvbSIsImlhdCI6MTU3NjQ2MzYwMywiZXhwIjoxNTc2NTUwMDAzfQ.MQm58KR1flXZOm8o13_npyZy8iQf5ir1agYAe7hkmvs"
+}
+````
+
+Create Sale:
+
+````
+mutation createSale {
+  createSale(
+    input: {
+      address: "3816 31st Avenue West"
+      latitude: 47.65465
+      longitude: -122.39658
+      type: "Family Sale"
+      categories: ["furniture", "clothing", "tools", "books"]
+      desc: "Sewing Notions, Bedding, Furniture, Electronics, toys and records."
+      year: 2019
+    }
+  ) {
+    id
+    address
+    latitude
+    longitude
+    type
+    categories
+    desc
+    year
+  }
+}
+````
+
+Get Sales:
+
+````
+query getSales {
+  sales(skip: 0, limit: 20) {
+    id
+    address
+    latitude
+    longitude
+    type
+    categories
+    desc
+    year
+  }
+}
+````
+
+Get Sale: 
+
+````
+query getSale {
+  sale(id: "5df6f990157d658b5adf37fb") {
+    id
+    address
+    latitude
+    longitude
+    type
+    categories
+    desc
+    year
+  }
+}
+````
+
+
+Delete Sale:
+
+````
+mutation deleteSale {
+  deleteSale(id:"5df6f990157d658b5adf37fb") {
+    address
+  }
+}
+````
+
+Subscribe to user created
+
+
+````
+subscription {
+  userCreated {
+    id
+    name
+    email
+  }
+}
 ````
