@@ -29,6 +29,10 @@ const saleSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  year: {
+    type: Number,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model('Sale', saleSchema);
