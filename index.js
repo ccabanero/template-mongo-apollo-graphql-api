@@ -28,9 +28,7 @@ const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
   context: async (integrationContext) => {
-
     const { req } = integrationContext;
-    const { connection } = integrationContext;
     const contextObj = {};
     if (req) {
       await verifyUser(req);
