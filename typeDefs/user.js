@@ -10,6 +10,10 @@ module.exports = gql`
     login(input: loginInput): Token
   }
 
+  extend type Subscription {
+    userCreated: User
+  }
+
   input signupInput {
     firstName: String!
     lastName: String!
@@ -35,9 +39,5 @@ module.exports = gql`
     isAdmin: Boolean!
     createdAt: Date!
     updatedAt: Date!
-  }
-
-  extend type Subscription {
-    userCreated: User
   }
 `;

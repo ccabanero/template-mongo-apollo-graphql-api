@@ -644,9 +644,14 @@ module.exports = {
 
 ````
 
-## Subscriptions
-
 ## GraphQL Playgrounds
+
+Playgrounds 101:
+
+* How to view schema
+* How to view documentation - and navigate
+* How to execute Queries and Mutations with Authentication 
+* How to use Subscription
 
 Sign up:
 

@@ -4,6 +4,8 @@ const { combineResolvers } = require('graphql-resolvers');
 const Sale = require('../database/models/sale');
 const User = require('../database/models/user');
 const { isAuthenticated, isSaleOwner } = require('./middleware');
+const PubSub = require('../subscription');
+const { saleEvents } = require('../subscription/events');
 
 module.exports = {
   // query resolvers
@@ -52,6 +54,12 @@ module.exports = {
         const user = await User.findOne({ email });
         const sale = new Sale({ ...input, user: user.id });
         const result = await sale.save();
+
+        // publish an event for sale created
+        PubSub.publish(saleEvents.SALE_CREATED, {
+          saleCreated: result,
+        });
+
         user.sales.push(result.id); // sale id
         await user.save();
         return result;
@@ -93,6 +101,12 @@ module.exports = {
         throw error;
       }
     }),
+  },
+  // subscription resolver
+  Subscription: {
+    saleCreated: {
+      subscribe: () => PubSub.asyncIterator(saleEvents.SALE_CREATED),
+    },
   },
   // field level resolvers
   Sale: {

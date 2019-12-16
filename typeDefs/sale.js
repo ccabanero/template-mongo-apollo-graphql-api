@@ -12,6 +12,10 @@ module.exports = gql`
     deleteSale(id: ID!): Sale
   }
 
+  extend type Subscription {
+    saleCreated: Sale
+  }
+
   input createSaleInput {
     address: String!
     latitude: Float!
