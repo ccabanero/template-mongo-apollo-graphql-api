@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { combineResolvers } = require('graphql-resolvers');
@@ -20,7 +21,6 @@ module.exports = {
         }
         return user;
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.log(error);
         throw error;
       }
@@ -46,7 +46,6 @@ module.exports = {
 
         return result;
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.log(error);
         throw error;
       }
@@ -68,7 +67,6 @@ module.exports = {
           token,
         };
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.log(error);
         throw error;
       }
@@ -88,7 +86,6 @@ module.exports = {
         const tasks = await Sale.find({ user: id });
         return tasks;
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.log(error);
         throw error;
       }
