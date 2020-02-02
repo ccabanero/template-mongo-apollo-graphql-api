@@ -25,6 +25,14 @@ Run MongoDB via Terminal:
 /Users/clintcabanero/mongodb/bin/mongod --dbpath=/Users/clintcabanero/mongodb-data
 ````
 
+Confirm you have /config/.env with the following:
+
+````
+PORT=3001
+MONGO_DB_URL=mongodb://your-database-url-here:27017/your-name-here-graphql
+JWT_SECRET_KEY=your-key-here
+````
+
 Run Dev
 
 ````
