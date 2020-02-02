@@ -55,16 +55,10 @@ npm install
 
 __Step 2__. Stand up a MongoDB database.
 
-GraphQL Playground
-
-1. Open chrome and launch use the GraphQL Playground as a client to the graphql api: http://localhost:3001/graphql
-2. Login
-3. Declare HTTP Headers such as:
+* If you are running a local/dev MongoDB then run it via Terminal. For example, based on how I installed MongoDB for local development, I run it with:
 
 ````
-{
-  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImNsaW50OEBnbWFpbC5jb20iLCJpYXQiOjE1NzYzNjAyNDYsImV4cCI6MTU3NjQ0NjY0Nn0.FYYZY1DFd0IVb8xcFLv1AxeghwaBwziEKkUjlBcGTVA"
-}
+/Users/clintcabanero/mongodb/bin/mongod --dbpath=/Users/clintcabanero/mongodb-data
 ````
 
 __Step 3__. Open the project in VS Code. Add an .env file to the root of the Node app for connecting to your MongoDB.
