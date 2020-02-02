@@ -67,41 +67,6 @@ GraphQL Playground
 }
 ````
 
-## Requirements
-
-This GraphQL API supports the following queries and mutations:
-
-* UnAuthenticated User can sign up (creates a user in User table)
-* UnAuthenticated User can login (if signed up, responds with a JWT token)
-* Authenticated User can create a sale
-* Authenticated User can update a sale (they own)
-* Authenticated User can delete a sale (then own)
-* Authenticated User can get user info
-* UnAuthenticated User can read all sales.
-* UnAuthenticated User can read sale details for provided sale id.
-
-This GraphQL Server supports the following subscriptions:
-
-* Event for when a new Sale is created by an authenticated user.
-* Event for when a new User is signed up.
-
-
-## Scaffolding
-
-__Package.json__
-
-Create package.json
-
-````
-npm init -y
-````
-
-* If you are running a local/dev MongoDB then run it via Terminal. For example, based on how I installed MongoDB for local development, I run it with:
-
-````
-/Users/clintcabanero/mongodb/bin/mongod --dbpath=/Users/clintcabanero/mongodb-data
-````
-
 __Step 3__. Open the project in VS Code. Add an .env file to the root of the Node app for connecting to your MongoDB.
 
 .env
