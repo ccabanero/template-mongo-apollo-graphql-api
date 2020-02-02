@@ -47,8 +47,9 @@ npm run test
 
 GraphQL Playground
 
-1. Login
-2. Declare HTTP Headers such as:
+1. Open chrome and launch use the GraphQL Playground as a client to the graphql api: http://localhost:3001/graphql
+2. Login
+3. Declare HTTP Headers such as:
 
 ````
 {
