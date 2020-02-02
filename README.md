@@ -55,6 +55,47 @@ npm install
 
 __Step 2__. Stand up a MongoDB database.
 
+GraphQL Playground
+
+1. Open chrome and launch use the GraphQL Playground as a client to the graphql api: http://localhost:3001/graphql
+2. Login
+3. Declare HTTP Headers such as:
+
+````
+{
+  "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImNsaW50OEBnbWFpbC5jb20iLCJpYXQiOjE1NzYzNjAyNDYsImV4cCI6MTU3NjQ0NjY0Nn0.FYYZY1DFd0IVb8xcFLv1AxeghwaBwziEKkUjlBcGTVA"
+}
+````
+
+## Requirements
+
+This GraphQL API supports the following queries and mutations:
+
+* UnAuthenticated User can sign up (creates a user in User table)
+* UnAuthenticated User can login (if signed up, responds with a JWT token)
+* Authenticated User can create a sale
+* Authenticated User can update a sale (they own)
+* Authenticated User can delete a sale (then own)
+* Authenticated User can get user info
+* UnAuthenticated User can read all sales.
+* UnAuthenticated User can read sale details for provided sale id.
+
+This GraphQL Server supports the following subscriptions:
+
+* Event for when a new Sale is created by an authenticated user.
+* Event for when a new User is signed up.
+
+
+## Scaffolding
+
+__Package.json__
+
+Create package.json
+
+````
+npm init -y
+````
+
 * If you are running a local/dev MongoDB then run it via Terminal. For example, based on how I installed MongoDB for local development, I run it with:
 
 ````
